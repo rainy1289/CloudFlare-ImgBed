@@ -165,7 +165,6 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
     <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:18px;padding:12px">进屋 →</button>
     <div class="err" id="err"></div>
     <div class="note"><em style="font-style:italic">Rain keeps time on the window;<br>the room keeps your pictures.</em></div>
-    <button class="pbtn" id="demoBtn" style="margin-top:14px;font-size:13px;padding:8px 14px;opacity:.75">不进屋，门口逛逛（演示）</button>
   </div>
 
   <!-- 屋里 -->
@@ -259,7 +258,6 @@ function doLogin(){
 }
 document.getElementById('loginBtn').onclick = doLogin;
 pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
-document.getElementById('demoBtn').onclick = function(){ enter(); };
 
 /* ================== 上传 ================== */
 var drop = document.getElementById('drop'), fileInput = document.getElementById('file'),
