@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RAINROOM · 管理室</title>
+<style>
+:root{
+  --bg:#efedf4; --card:#fdf8ef; --ink:#55506b; --ink-soft:#8a84a3;
+  --rain:#aebcd8; --blue:#9db8dd; --blue-deep:#7d9cc9;
+  --pink:#e8b4c4; --yellow:#f5dfae; --mint:#b5d4c4;
+  --shadow:rgba(85,80,107,.28);
+}
+body.dark{
+  --bg:#3a3752; --card:#4c4867; --ink:#d8d3ea; --ink-soft:#9c96b8;
+  --rain:#6f7ba0; --blue:#5f7dae; --blue-deep:#8fa8d0;
+  --pink:#c9a0b0; --yellow:#c9b078; --mint:#8fb5a3;
+  --shadow:rgba(20,18,35,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"VT323",monospace;
+  background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:70px;transition:background .25s;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(115deg,transparent 0 14px,var(--rain) 14px 15.5px,transparent 15.5px 34px);
+  opacity:.30;
+}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 14px}
+.pcard{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--shadow);border-radius:0}
+.pbtn{
+  font:inherit;font-size:15px;color:var(--ink);background:var(--card);
+  border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);
+  padding:9px 14px;border-radius:0;cursor:pointer;user-select:none;letter-spacing:1px;
+}
+.pbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow)}
+.pbtn.blue{background:var(--blue)} .pbtn.pink{background:var(--pink)} .pbtn.mint{background:var(--mint)}
+.pin{
+  width:100%;font:inherit;font-size:15px;padding:10px 12px;color:var(--ink);
+  background:#fffdf8;border:2.5px solid var(--ink);border-radius:0;outline:none;margin-bottom:10px;
+}
+body.dark .pin{background:#3f3c58}
+.pin:focus{box-shadow:3px 3px 0 var(--shadow)}
+label{display:block;font-size:13px;letter-spacing:1px;color:var(--ink-soft);margin:0 0 6px 2px}
+.hidden{display:none !important}
+a{color:var(--blue-deep);text-decoration:none}
+
+.topbar{
+  position:sticky;top:0;z-index:50;margin:0 -14px 16px;padding:12px 14px;
+  background:linear-gradient(180deg,#d9dcee,#e9d9e2);
+  border-bottom:3px solid var(--ink);display:flex;align-items:center;gap:10px;
+}
+body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
+.sq{display:flex;gap:8px;align-items:center;font-size:17px;line-height:1}
+.brand{flex:1;font-size:24px;letter-spacing:2px;line-height:1}
+.brand small{display:block;font-size:11px;letter-spacing:6px;color:var(--ink-soft);margin-top:2px}
+.iconbtn{
+  width:36px;height:36px;background:var(--card);border:2.5px solid var(--ink);
+  box-shadow:3px 3px 0 var(--shadow);display:flex;align-items:center;justify-content:center;
+  font-size:17px;cursor:pointer;user-select:none;color:var(--ink);padding:0;
+}
+
+.gate{max-width:420px;margin:8vh auto 0;padding:30px 22px;text-align:center}
+.gate h2{font-size:23px;margin-bottom:6px;text-shadow:2px 2px 0 var(--yellow)}
+.gate .sub{font-size:12px;letter-spacing:5px;color:var(--ink-soft);margin-bottom:22px}
+.gate .pin{text-align:center;margin-bottom:12px;letter-spacing:2px}
+.gate .err{color:#c0657a;font-size:13px;margin-top:10px;min-height:18px}
+
+.sect{display:flex;align-items:center;gap:10px;margin:22px 0 14px;font-size:20px;letter-spacing:2px}
+.sect::after{content:"";flex:1;height:3px;background:var(--ink)}
+.sect:first-child{margin-top:6px}
+.box{padding:18px;margin-bottom:4px}
+.box h3{font-size:17px;letter-spacing:1px;margin-bottom:14px;text-shadow:2px 2px 0 rgba(232,180,196,.5)}
+.box .row2{display:flex;gap:10px}
+.box .row2 > div{flex:1}
+.box .note{font-size:12px;color:var(--ink-soft);margin:4px 0 12px;line-height:1.8}
+.box .stat{font-size:13px;color:var(--ink-soft);margin-bottom:10px}
+.savebar{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+.msg{min-height:18px;font-size:13px;margin-top:8px}
+.msg.ok{color:#5d8471} .msg.bad{color:#c0657a}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border-top:3px solid var(--ink);display:flex}
+.tab{flex:1;padding:10px 0 12px;text-align:center;font-size:15px;letter-spacing:2px;cursor:pointer;user-select:none;color:var(--ink)}
+.tab .ic{display:block;font-size:19px;margin-bottom:2px}
+.tab.on{background:var(--mint);box-shadow:inset 0 0 0 3px var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="sq"><span>♡</span><span>☂</span><span>✦</span></div>
+    <div class="brand">RAINROOM<small>雨 的 小 屋 · 管 理 室</small></div>
+    <button class="iconbtn" id="themeBtn" title="切换主题">☾</button>
+  </div>
+
+  <!-- 管理门 -->
+  <div class="gate pcard" id="gate">
+    <h2>管理室的门</h2>
+    <div class="sub">STAFF ONLY · 管理员账号才能进这间房</div>
+    <input class="pin" id="user" type="text" placeholder="管理员用户名" autocomplete="username">
+    <input class="pin" id="pwd" type="password" placeholder="管理密码" autocomplete="current-password">
+    <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:17px;padding:12px;margin-top:4px">开锁 →</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- 管理面板 -->
+  <div id="panel" class="hidden">
+
+    <!-- 存储渠道 -->
+    <div class="sect">STORAGE · 存储渠道</div>
+    <div class="box pcard">
+      <h3>HuggingFace 渠道</h3>
+      <div class="stat" id="hfStat">读取中…</div>
+      <label>仓库名称（用户名/仓库名）</label>
+      <input class="pin" id="hfRepo" type="text" placeholder="rainy420/xxxx">
+      <label>Access Token（留空 = 不修改）</label>
+      <input class="pin" id="hfToken" type="password" placeholder="hf_xxxxxxxx（留空不修改）">
+      <label><input type="checkbox" id="hfEnabled" checked> 启用此渠道</label>
+      <div class="savebar">
+        <button class="pbtn blue" id="hfSave">保存渠道</button>
+      </div>
+      <div class="msg" id="hfMsg"></div>
+    </div>
+
+    <!-- 密码 -->
+    <div class="sect">KEYS · 密码</div>
+    <div class="box pcard">
+      <h3>上传密码（进屋门槛）</h3>
+      <div class="note" id="userPwdState">读取中…</div>
+      <label>新上传密码（留空 = 不修改）</label>
+      <input class="pin" id="userPwd" type="password" placeholder="留空则不修改">
+      <div class="savebar"><button class="pbtn mint" id="userPwdSave">保存上传密码</button></div>
+      <div class="msg" id="userPwdMsg"></div>
+    </div>
+    <div class="box pcard">
+      <h3>管理员账号</h3>
+      <div class="note" id="adminPwdState">读取中…</div>
+      <label>管理员用户名</label>
+      <input class="pin" id="adminUser" type="text" placeholder="留空则不修改">
+      <label>新管理密码（留空 = 不修改）</label>
+      <input class="pin" id="adminPwd" type="password" placeholder="留空则不修改">
+      <div class="savebar"><button class="pbtn mint" id="adminPwdSave">保存管理员账号</button></div>
+      <div class="msg" id="adminPwdMsg"></div>
+    </div>
+
+    <!-- 会话 -->
+    <div class="sect">SESSION · 免密时长</div>
+    <div class="box pcard">
+      <h3>登录有效期（天）</h3>
+      <div class="note">有效期内开门不用输密码；到期后输一次自动续期。范围 1~3650。</div>
+      <div class="row2">
+        <div>
+          <label>上传端（访客/自己）</label>
+          <input class="pin" id="userDays" type="number" min="1" max="3650">
+        </div>
+        <div>
+          <label>管理端（图库/管理室）</label>
+          <input class="pin" id="adminDays" type="number" min="1" max="3650">
+        </div>
+      </div>
+      <div class="savebar">
+        <button class="pbtn" id="days7">设为 7 天</button>
+        <button class="pbtn blue" id="daysSave">保存时长</button>
+      </div>
+      <div class="msg" id="daysMsg"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab" onclick="location.href='index.html'"><span class="ic">✦</span>上传</div>
+  <div class="tab" onclick="location.href='gallery.html'"><span class="ic">▦</span>图库</div>
+  <div class="tab on"><span class="ic">⚙</span>管理室</div>
+</div>
+
+<script>
+var API = '';
+var themeBtn = document.getElementById('themeBtn');
+function applyTheme(d){ document.body.classList.toggle('dark', d); themeBtn.textContent = d ? '☀' : '☾'; try{ localStorage.setItem('rr_theme', d?'1':'0'); }catch(e){} }
+try{ applyTheme(localStorage.getItem('rr_theme')==='1'); }catch(e){}
+themeBtn.onclick = function(){ applyTheme(!document.body.classList.contains('dark')); };
+
+var gate = document.getElementById('gate'), panel = document.getElementById('panel'),
+    pwd = document.getElementById('pwd'), err = document.getElementById('err');
+function enter(){ gate.classList.add('hidden'); panel.classList.remove('hidden'); init(); }
+function fail(m){ err.textContent = m||'密码不对'; gate.classList.add('shake'); setTimeout(function(){ gate.classList.remove('shake'); },450); }
+function msg(el, text, ok){ el.textContent = text; el.className = 'msg ' + (ok?'ok':'bad'); }
+
+document.getElementById('loginBtn').onclick = function(){
+  var u = document.getElementById('user').value.trim(), p = pwd.value.trim();
+  if(!p){ fail('先输入密码'); return; }
+  err.textContent = '开锁中…';
+  fetch(API + '/api/auth/adminLogin', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    credentials:'include', body: JSON.stringify({username: u, password: p})
+  }).then(function(r){
+    if(r.ok){ err.textContent=''; enter(); }
+    else if(r.status===401){ fail('账号或密码不对'); }
+    else{ fail('锁卡住了 ('+r.status+')'); }
+  }).catch(function(){ fail('连不上小屋（本地预览不能真登录）'); });
+};
+pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+err.textContent = '检查钥匙…';
+fetch(API + '/api/auth/sessionCheck', {credentials:'include'})
+  .then(function(r){ return r.json(); })
+  .then(function(d){ err.textContent=''; if(d && d.valid && d.authType==='admin'){ enter(); } })
+  .catch(function(){ err.textContent=''; });
+
+/* ================= 数据 ================= */
+var uploadCfg = null, securityCfg = null;
+
+function jget(url){ return fetch(API + url, {credentials:'include'}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }); }
+function jpost(url, body){ return fetch(API + url, {method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body: JSON.stringify(body)}).then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); }); }
+
+function init(){
+  jget('/api/manage/sysConfig/upload').then(function(cfg){
+    uploadCfg = cfg;
+    var chs = (cfg.huggingface && cfg.huggingface.channels) || [];
+    var ch = null;
+    for(var i=0;i<chs.length;i++){ if(chs[i].savePath !== 'environment variable'){ ch = chs[i]; break; } }
+    if(!ch && chs.length) ch = chs[0];
+    if(!ch){ document.getElementById('hfStat').textContent = '没有找到 HF 渠道'; return; }
+    uploadCfg._hf = ch;
+    document.getElementById('hfStat').textContent = '当前仓库：' + (ch.repo || '未设置') + (ch.savePath==='environment variable' ? '（来自环境变量，仓库名不可在此修改）' : '');
+    document.getElementById('hfRepo').value = ch.repo || '';
+    document.getElementById('hfRepo').disabled = (ch.savePath==='environment variable');
+    document.getElementById('hfEnabled').checked = ch.enabled !== false;
+  }).catch(function(e){ document.getElementById('hfStat').textContent = '读取失败 ('+e.message+')'; });
+
+  jget('/api/manage/sysConfig/security').then(function(cfg){
+    securityCfg = cfg;
+    var u = (cfg.auth && cfg.auth.user) || {}, a = (cfg.auth && cfg.auth.admin) || {};
+    document.getElementById('userPwdState').textContent = u._hasPassword ? '已设置（出于安全不回显，输入新密码即可更换）' : '未设置（任何人都能进屋，建议设置）';
+    document.getElementById('adminPwdState').textContent = (a._hasPassword ? '密码已设置' : '未设置密码') + (a.adminUsername ? '，用户名：' + a.adminUsername : '');
+    document.getElementById('adminUser').value = a.adminUsername || '';
+    document.getElementById('userDays').value = (cfg.access && cfg.access.userSessionMaxAge) || 14;
+    document.getElementById('adminDays').value = (cfg.access && cfg.access.adminSessionMaxAge) || 14;
+  }).catch(function(){});
+}
+
+/* 保存 HF 渠道 */
+document.getElementById('hfSave').onclick = function(){
+  var m = document.getElementById('hfMsg');
+  if(!uploadCfg || !uploadCfg._hf){ msg(m,'渠道还没加载出来，稍后重试'); return; }
+  var ch = uploadCfg._hf;
+  if(ch.savePath !== 'environment variable'){
+    var repo = document.getElementById('hfRepo').value.trim();
+    if(repo) ch.repo = repo;
+  }
+  var tok = document.getElementById('hfToken').value.trim();
+  if(tok) ch.token = tok;
+  ch.enabled = document.getElementById('hfEnabled').checked;
+  msg(m,'保存中…', true);
+  jpost('/api/manage/sysConfig/upload', uploadCfg)
+    .then(function(){ msg(m,'✓ 已保存，新图将存入新配置', true); document.getElementById('hfToken').value=''; })
+    .catch(function(e){ msg(m,'保存失败 ('+e.message+')'); });
+};
+
+/* 保存密码 */
+document.getElementById('userPwdSave').onclick = function(){
+  var m = document.getElementById('userPwdMsg'), p = document.getElementById('userPwd').value;
+  if(!p){ msg(m,'输入新密码再保存（留空表示不修改）'); return; }
+  if(!securityCfg) securityCfg = {auth:{}};
+  if(!securityCfg.auth) securityCfg.auth = {};
+  if(!securityCfg.auth.user) securityCfg.auth.user = {};
+  securityCfg.auth.user.authCode = p;
+  msg(m,'保存中…', true);
+  jpost('/api/manage/sysConfig/security', securityCfg)
+    .then(function(){ msg(m,'✓ 上传密码已更新', true); document.getElementById('userPwd').value=''; document.getElementById('userPwdState').textContent='已设置'; })
+    .catch(function(e){ msg(m,'保存失败 ('+e.message+')'); });
+};
+document.getElementById('adminPwdSave').onclick = function(){
+  var m = document.getElementById('adminPwdMsg');
+  var u = document.getElementById('adminUser').value.trim(), p = document.getElementById('adminPwd').value;
+  if(!u && !p){ msg(m,'用户名和密码都留空 = 不修改'); return; }
+  if(!securityCfg) securityCfg = {auth:{}};
+  if(!securityCfg.auth) securityCfg.auth = {};
+  if(!securityCfg.auth.admin) securityCfg.auth.admin = {};
+  if(u) securityCfg.auth.admin.adminUsername = u;
+  if(p) securityCfg.auth.admin.adminPassword = p;
+  msg(m,'保存中…', true);
+  jpost('/api/manage/sysConfig/security', securityCfg)
+    .then(function(){ msg(m,'✓ 管理员账号已更新', true); document.getElementById('adminPwd').value=''; })
+    .catch(function(e){ msg(m,'保存失败 ('+e.message+')'); });
+};
+
+/* 会话时长 */
+document.getElementById('days7').onclick = function(){
+  document.getElementById('userDays').value = 7;
+  document.getElementById('adminDays').value = 7;
+};
+document.getElementById('daysSave').onclick = function(){
+  var m = document.getElementById('daysMsg');
+  var ud = parseInt(document.getElementById('userDays').value,10),
+      ad = parseInt(document.getElementById('adminDays').value,10);
+  if(!ud || ud<1 || ud>3650 || !ad || ad<1 || ad>3650){ msg(m,'天数要在 1~3650 之间'); return; }
+  if(!securityCfg) securityCfg = {};
+  if(!securityCfg.access) securityCfg.access = {};
+  securityCfg.access.userSessionMaxAge = ud;
+  securityCfg.access.adminSessionMaxAge = ad;
+  msg(m,'保存中…', true);
+  jpost('/api/manage/sysConfig/security', securityCfg)
+    .then(function(){ msg(m,'✓ 免密时长已更新：上传端 '+ud+' 天，管理端 '+ad+' 天', true); })
+    .catch(function(e){ msg(m,'保存失败 ('+e.message+')'); });
+};
+</script>
+</body>
+</html>
