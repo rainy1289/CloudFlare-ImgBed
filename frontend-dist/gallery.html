@@ -67,6 +67,12 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
 
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.dhead{
+  grid-column:1/-1;display:flex;align-items:center;gap:10px;
+  font-size:16px;letter-spacing:2px;margin:6px 0 -4px;
+}
+.dhead::after{content:"";flex:1;height:2.5px;background:var(--ink);opacity:.6}
+.dhead .dsub{font-size:11px;color:var(--ink-soft);letter-spacing:1px}
 .thumb{cursor:pointer;overflow:hidden;padding:0;background:var(--card);position:relative}
 .thumb .im{aspect-ratio:1;background:var(--bg);border-bottom:3px solid var(--ink);overflow:hidden}
 .thumb img{width:100%;height:100%;object-fit:cover;display:block}
@@ -118,8 +124,8 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
 <div class="tabs">
   <div class="tab" onclick="location.href='index.html'"><span class="ic">✦</span>上传</div>
   <div class="tab on"><span class="ic">▦</span>图库</div>
+  <div class="tab" onclick="location.href='admin.html'"><span class="ic">⚙</span>管理室</div>
   <div class="tab" id="soon1"><span class="ic">✂</span>工具间</div>
-  <div class="tab" id="soon2"><span class="ic">☰</span>关于</div>
 </div>
 
 <div class="mask hidden" id="mask">
@@ -151,7 +157,6 @@ themeBtn.onclick = function(){ applyTheme(!document.body.classList.contains('dar
 var toast = document.getElementById('toast'), toastTimer = null;
 function say(msg){ toast.textContent = msg; toast.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ toast.style.display='none'; },1800); }
 document.getElementById('soon1').onclick = function(){ say('工具间还在刷漆，过两天再来 ♡'); };
-document.getElementById('soon2').onclick = function(){ say('关于也在刷漆 ♡'); };
 
 /* 管理登录 */
 var gate = document.getElementById('gate'), lib = document.getElementById('lib'),
@@ -173,6 +178,16 @@ document.getElementById('loginBtn').onclick = function(){
   }).catch(function(){ fail('连不上小屋（本地预览不能真登录）'); });
 };
 pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+
+/* 已有管理员会话 → 直接开抽屉 */
+err.textContent = '检查钥匙…';
+fetch(API + '/api/auth/sessionCheck', {credentials:'include'})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    err.textContent = '';
+    if(d && d.valid && d.authType === 'admin'){ enter(); }
+  })
+  .catch(function(){ err.textContent = ''; });
 
 /* 图库 */
 var grid = document.getElementById('grid'), emptyBox = document.getElementById('empty'),
@@ -200,9 +215,18 @@ function load(){
       if(d===0) return;
       var files = Array.isArray(d) ? d : (d.files || d.list || d.data || d.records || []);
       if(!files.length && start===0){ emptyBox.classList.remove('hidden'); moreBtn.classList.add('hidden'); return; }
+      var lastKey = null;
       files.forEach(function(r){
         var info = recordInfo(r);
         if(!info.src) return;
+        var dk = dateKey(r);
+        if(dk.key !== lastKey){
+          lastKey = dk.key;
+          var hd = document.createElement('div');
+          hd.className = 'dhead';
+          hd.innerHTML = esc(dk.label) + (dk.sub ? ' <span class="dsub">' + esc(dk.sub) + '</span>' : '');
+          grid.appendChild(hd);
+        }
         var el = document.createElement('div');
         el.className = 'thumb pcard';
         el.innerHTML = '<div class="im"><img loading="lazy" src="' + esc(info.src) + '" alt=""></div><div class="nm">' + esc(info.name) + '</div>';
@@ -219,6 +243,31 @@ function load(){
 moreBtn.onclick = load;
 
 function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+/* 从记录里尽量找出上传日期 */
+function dateKey(r){
+  var v = null;
+  var keys = ['time','timestamp','uploadTime','uploadDate','createdAt','date','mtime'];
+  for(var i=0;i<keys.length;i++){ if(r && r[keys[i]]!==undefined && r[keys[i]]!==null && r[keys[i]]!==''){ v = r[keys[i]]; break; } }
+  if(v===null && r && r.metadata){ for(var j=0;j<keys.length;j++){ if(r.metadata[keys[j]]!==undefined && r.metadata[keys[j]]!==null && r.metadata[keys[j]]!==''){ v = r.metadata[keys[j]]; break; } } }
+  var d = null;
+  if(typeof v === 'number' || (typeof v === 'string' && /^\d+$/.test(v))){
+    var n = Number(v);
+    if(n > 1e12) d = new Date(n);
+    else if(n > 1e9) d = new Date(n * 1000);
+  } else if(typeof v === 'string' && v){
+    var p = new Date(v);
+    if(!isNaN(p.getTime())) d = p;
+  }
+  if(!d) return {key:'unknown', label:'更早的日子', sub:''};
+  var now = new Date();
+  var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  var dd = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  var diff = Math.round((today - dd) / 86400000);
+  var label = diff===0 ? '今天' : (diff===1 ? '昨天' : d.getFullYear() + ' 年 ' + (d.getMonth()+1) + ' 月 ' + d.getDate() + ' 日');
+  var sub = ('0'+d.getHours()).slice(-2) + ':' + ('0'+d.getMinutes()).slice(-2);
+  return {key: dd.getTime() + '', label: label, sub: sub};
+}
 
 /* 查看器 */
 var mask = document.getElementById('mask'), vImg = document.getElementById('vImg'),
