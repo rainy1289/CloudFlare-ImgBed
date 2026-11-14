@@ -1,20 +1,410 @@
-<!doctype html><html lang=""><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"><script data-cfasync="false">(() => {
-      const root = document.documentElement;
-      let cached = {};
-      try { cached = JSON.parse(localStorage.getItem('vuex') || '{}') || {}; } catch {}
-      const hour = new Date().getHours();
-      const dark = cached.cusDarkMode && typeof cached.useDarkMode === 'boolean'
-        ? cached.useDarkMode
-        : matchMedia('(prefers-color-scheme: dark)').matches || hour >= 22 || hour < 6;
-      root.classList.add('entry-loading');
-      root.classList.toggle('dark', dark);
-      // 配置请求与应用资源并行，标题不必等主应用启动后才出现。
-      const configReady = fetch('/api/userConfig', { credentials: 'same-origin' })
-        .then(response => response.ok ? response.json() : null)
-        .catch(() => null);
-      window.__siteEntryBootstrap = { config: cached.userConfig, configReady };
-    })();</script><style>html.entry-loading { background: #f5f5f7; }
-    html.entry-loading.dark { background: #0f0f0f; color-scheme: dark; }</style><link rel="preload" href="/entry/entry-loader.c76da827.js" as="script"><link rel="icon" href="/static/media/logo.png"><link rel="apple-touch-icon" href="/static/media/logo.png"><link rel="mask-icon" href="/static/media/logo.png" color="#f4b400"><link rel="preload" href="/fonts/Pacifico-Regular.dc63ac94.woff2" as="font" type="font/woff2" crossorigin><meta name="description" content="Sanyue ImgHub - A modern file hosting platform"><meta name="keywords" content="Sanyue, ImgHub, file hosting, image hosting, cloud storage"><meta name="author" content="SanyueQi"><title>Sanyue ImgHub</title><link rel="stylesheet" href="/entry/entry-loader.f41470d3.css"><link rel="stylesheet" href="/css/chunk-vendors.c8a4c1c7.css"><link rel="stylesheet" href="/css/app.7127532f.css">
-      <link rel="stylesheet" href="/custom/rainroom.css"><script data-cfasync="false" defer="defer" src="/js/chunk-vendors.afbfd4cf.js"></script><script data-cfasync="false" defer="defer" src="/js/app.b6b1d908.js"></script></head><body><noscript><style>#entry-loader { display: none; }</style><strong>We're sorry but sanyue_imghub doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="entry-loader" role="status" aria-live="polite" aria-label="Loading"><div class="entry-loader-content"><div class="entry-loader-name" aria-hidden="true"></div><div class="entry-loader-progress" aria-hidden="true"><div class="entry-loader-duck-travel"><div class="entry-loader-duck"><svg class="entry-duck-head" viewBox="0 0 56 48" fill="none"><path d="M25 9Q21 2 26 3Q29 3 29 8M29 8Q34 2 36 6" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><ellipse cx="28" cy="26" rx="22" ry="19" fill="currentColor"/><path d="M15 17Q18 12 24 12" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.22"/><ellipse cx="19.5" cy="25" rx="2" ry="2.7" fill="var(--entry-duck-eye)"/><ellipse cx="36.5" cy="25" rx="2" ry="2.7" fill="var(--entry-duck-eye)"/><g fill="#fff" opacity="0.9"><circle cx="19" cy="24" r="0.7"/><circle cx="36" cy="24" r="0.7"/></g><g fill="var(--entry-duck-cheek)" opacity="0.65"><ellipse cx="14.5" cy="31" rx="3.8" ry="2.4"/><ellipse cx="41.5" cy="31" rx="3.8" ry="2.4"/></g><ellipse cx="28" cy="33" rx="7.5" ry="4.3" fill="var(--entry-duck-beak)"/><path d="M23 33Q28 35 33 33" stroke="var(--entry-duck-mouth)" stroke-width="1.2" stroke-linecap="round"/></svg> <svg class="entry-duck-ripples" viewBox="0 0 56 48" fill="none" stroke="var(--entry-accent)" stroke-width="1" stroke-linecap="round"><path d="M5 46H12M22 47H34M44 46H51"/></svg></div><div class="entry-loader-bar"></div></div><div class="entry-loader-track"></div></div></div></div><div id="app" inert></div><script data-cfasync="false" src="/entry/entry-loader.c76da827.js"></script>
-    <script src="/custom/rainroom.js"></script>
-    </body></html>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RAINROOM · 雨的小屋</title>
+<style>
+/* ============ RAINROOM 像素设计系统（与 rainroom.css 同源） ============ */
+:root{
+  --bg:#efedf4; --card:#fdf8ef; --ink:#55506b; --ink-soft:#8a84a3;
+  --rain:#aebcd8; --blue:#9db8dd; --blue-deep:#7d9cc9;
+  --pink:#e8b4c4; --yellow:#f5dfae; --mint:#b5d4c4;
+  --shadow:rgba(85,80,107,.28);
+}
+body.dark{
+  --bg:#3a3752; --card:#4c4867; --ink:#d8d3ea; --ink-soft:#9c96b8;
+  --rain:#6f7ba0; --blue:#5f7dae; --blue-deep:#4d6a96;
+  --pink:#a97e90; --yellow:#a89260; --mint:#6f9484;
+  --shadow:rgba(20,18,35,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"VT323",monospace;
+  background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:70px;
+  transition:background .25s;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(115deg,transparent 0 14px,var(--rain) 14px 15.5px,transparent 15.5px 34px);
+  opacity:.30;
+}
+.wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:0 14px}
+.pcard{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--shadow);border-radius:0}
+.pbtn{
+  font:inherit;font-size:16px;color:var(--ink);background:var(--card);
+  border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);
+  padding:10px 16px;border-radius:0;cursor:pointer;user-select:none;letter-spacing:1px;
+}
+.pbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow)}
+.pbtn.blue{background:var(--blue)} .pbtn.pink{background:var(--pink)}
+.pbtn.yellow{background:var(--yellow)} .pbtn.mint{background:var(--mint)}
+.pbtn:disabled{opacity:.55;cursor:not-allowed}
+input.pbtn,textarea{font:inherit}
+.pin{
+  width:100%;font:inherit;font-size:16px;padding:11px 14px;color:var(--ink);
+  background:#fffdf8;border:2.5px solid var(--ink);border-radius:0;outline:none;
+}
+body.dark .pin{background:#3f3c58}
+.pin:focus{box-shadow:4px 4px 0 var(--shadow)}
+h1,h2{font-weight:400;letter-spacing:1px}
+.serif{font-family:"Songti SC","Noto Serif SC",serif}
+.hidden{display:none !important}
+a{color:var(--blue-deep);text-decoration:none}
+
+/* ============ 顶栏 ============ */
+.topbar{
+  position:sticky;top:0;z-index:50;margin:0 -14px 16px;padding:12px 14px;
+  background:linear-gradient(180deg,#d9dcee,#e9d9e2);
+  border-bottom:3px solid var(--ink);
+  display:flex;align-items:center;gap:10px;
+}
+body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
+.sq{display:flex;gap:8px;align-items:center;font-size:17px;line-height:1}
+.sq span{display:inline-block}
+.brand{flex:1;font-size:24px;letter-spacing:2px;line-height:1}
+.brand small{display:block;font-size:11px;letter-spacing:6px;color:var(--ink-soft);margin-top:2px}
+.iconbtn{
+  width:36px;height:36px;background:var(--card);border:2.5px solid var(--ink);
+  box-shadow:3px 3px 0 var(--shadow);display:flex;align-items:center;justify-content:center;
+  font-size:17px;cursor:pointer;user-select:none;color:var(--ink);padding:0;
+}
+
+/* ============ Hero ============ */
+.hero{
+  position:relative;overflow:hidden;padding:26px 20px 22px;margin-bottom:22px;
+  background:
+    radial-gradient(var(--rain) 2.2px,transparent 2.6px) 0 0/18px 18px,
+    radial-gradient(var(--rain) 1.4px,transparent 1.8px) 9px 9px/18px 18px,
+    var(--card);
+  border:3px solid var(--ink);box-shadow:8px 8px 0 var(--shadow);
+}
+.hero .tag{font-size:13px;letter-spacing:4px;color:var(--ink-soft);margin-bottom:10px}
+.hero h1{font-size:clamp(30px,8vw,42px);line-height:1.1;text-shadow:3px 3px 0 var(--pink);margin-bottom:12px}
+.hero .cn{font-size:16px;line-height:2;margin-bottom:16px}
+.hero .chips{display:flex;gap:10px;flex-wrap:wrap}
+.hero .chip{font-size:14px;padding:5px 12px;background:var(--card);border:2.5px solid var(--ink);box-shadow:3px 3px 0 var(--shadow)}
+.hero .chip.m{background:var(--mint)} .hero .chip.p{background:var(--pink)} .hero .chip.y{background:var(--yellow)}
+.deco{position:absolute;pointer-events:none;opacity:.9}
+.d1{top:12px;right:16px;font-size:22px;display:inline-block;animation:sway 3.2s ease-in-out infinite}
+.d2{bottom:12px;right:48px;font-size:20px}
+@keyframes sway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+
+/* ============ 门（密码登录） ============ */
+.gate{max-width:420px;margin:8vh auto 0;padding:30px 22px;text-align:center;position:relative}
+.gate h2{font-size:24px;margin-bottom:6px;text-shadow:2px 2px 0 var(--yellow)}
+.gate .sub{font-size:12px;letter-spacing:5px;color:var(--ink-soft);margin-bottom:22px}
+.gate .pin{text-align:center;margin-bottom:14px;letter-spacing:3px}
+.gate .err{color:#c0657a;font-size:13px;margin-top:10px;min-height:18px}
+.gate .shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.gate .note{margin-top:20px;font-size:13px;color:var(--ink-soft)}
+
+/* ============ 上传区 ============ */
+.drop{
+  border:3px dashed var(--ink);padding:28px 14px;text-align:center;
+  margin-bottom:18px;transition:background .15s;
+}
+.dragging{background:rgba(157,184,221,.18)}
+.drop h2{font-size:22px;letter-spacing:2px;margin-bottom:6px}
+.drop .tip{font-size:14px;color:var(--ink-soft);margin-bottom:16px}
+.drop .pbtn{width:70%;font-size:18px;padding:12px}
+
+/* ============ 结果列表 ============ */
+.item{margin-bottom:16px;padding:14px}
+.item .row{display:flex;gap:12px;align-items:flex-start}
+.item img{width:72px;height:72px;object-fit:cover;border:2.5px solid var(--ink);background:var(--bg);flex:none}
+.item .meta{flex:1;min-width:0}
+.item .name{font-size:13px;word-break:break-all;margin-bottom:4px;color:var(--ink-soft)}
+.item .url{font-size:13px;word-break:break-all;background:var(--bg);border:2px solid var(--ink);padding:6px 8px;margin-bottom:8px;user-select:all}
+.item .btns{display:flex;gap:8px;flex-wrap:wrap}
+.item .btns .pbtn{font-size:13px;padding:6px 10px;box-shadow:3px 3px 0 var(--shadow)}
+.bar{height:14px;border:2.5px solid var(--ink);background:var(--card);margin-top:10px;position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0;width:0%;background:var(--blue);transition:width .2s}
+.item .stat{font-size:12px;color:var(--ink-soft);margin-top:6px}
+
+/* ============ 底栏 ============ */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border-top:3px solid var(--ink);display:flex}
+.tab{flex:1;padding:10px 0 12px;text-align:center;font-size:15px;letter-spacing:2px;cursor:pointer;user-select:none}
+.tab .ic{display:block;font-size:19px;margin-bottom:2px}
+.tab.on{background:var(--mint);box-shadow:inset 0 0 0 3px var(--ink)}
+.foot{text-align:center;font-size:12px;color:var(--ink-soft);padding:18px 0 8px;letter-spacing:2px}
+@media (max-width:360px){.item .btns .pbtn{font-size:12px;padding:5px 8px}}
+/* 公告弹窗 */
+.mask2{position:fixed;inset:0;background:rgba(60,56,86,.45);z-index:98;display:none}
+.mask2.show{display:block}
+.news{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:99;
+  width:min(420px,88vw);max-height:76vh;overflow:auto;text-align:left;
+  padding:20px;display:none;
+}
+.news.show{display:block}
+.news h3{font-size:22px;letter-spacing:2px;margin-bottom:4px;text-shadow:2px 2px 0 var(--yellow)}
+.news .sub{font-size:13px;letter-spacing:5px;color:var(--ink-soft);margin-bottom:14px}
+.news .body{font-family:"Songti SC","Noto Serif SC",serif;font-size:15px;line-height:2}
+.news .body em{font-style:normal;background:var(--yellow);padding:0 3px}
+.news .x{position:absolute;top:10px;right:10px;width:32px;height:32px;padding:0;font-size:16px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="sq"><span>♡</span><span>☂</span><span>✦</span></div>
+    <div class="brand">RAINROOM<small>雨 的 小 屋</small></div>
+    <button class="iconbtn" id="themeBtn" title="切换主题">☾</button>
+  </div>
+
+  <!-- 门 -->
+  <div class="gate pcard" id="gate">
+    <h2>外面下雨，屋里收藏</h2>
+    <div class="sub">KNOCK KNOCK · 敲敲小屋的门</div>
+    <input class="pin" id="pwd" type="password" placeholder="输入小屋密码" autocomplete="current-password">
+    <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:18px;padding:12px">进屋 →</button>
+    <div class="err" id="err"></div>
+    <div class="note"><em style="font-style:italic">Rain keeps time on the window;<br>the room keeps your pictures.</em></div>
+    <button class="pbtn" id="demoBtn" style="margin-top:14px;font-size:13px;padding:8px 14px;opacity:.75">不进屋，门口逛逛（演示）</button>
+  </div>
+
+  <!-- 屋里 -->
+  <div id="home" class="hidden">
+
+    <div class="hero">
+      <span class="deco d1">☂</span><span class="deco d2">☁</span>
+      <div class="tag">♡ WELCOME TO MY RAINY ROOM ♡</div>
+      <h1>IT'S RAINING,<br>COME IN.</h1>
+      <p class="cn serif">外面下雨，屋里收藏。<br>把喜欢的图，好好放进房间。</p>
+      <div class="chips">
+        <span class="chip m">✿ 永久保存</span>
+        <span class="chip p">✦ 原图上传</span>
+        <span class="chip y">♡ 专属相册</span>
+      </div>
+    </div>
+
+    <div class="drop pcard" id="drop">
+      <h2>DROP IMAGE HERE</h2>
+      <p class="tip serif">拖入图片，点击选择，或直接粘贴</p>
+      <button class="pbtn blue" id="pickBtn">选择文件</button>
+      <input type="file" id="file" multiple accept="image/*" class="hidden">
+      <div class="bar hidden" id="bar"><i></i></div>
+    </div>
+
+    <div id="list"></div>
+
+    <div class="foot">rainroom · 图放在屋里，雨下在窗外</div>
+  </div>
+</div>
+
+<div class="mask2" id="newsMask"></div>
+<div class="news pcard" id="news">
+  <button class="pbtn x" id="newsX">✕</button>
+  <h3>RAINY NEWS ✉</h3>
+  <div class="sub">屋 主 的 话</div>
+  <div class="body">
+    人！欢迎来到 <em>雨的小屋</em>。<br><br>
+    这里存图不看天气：下雨天存，晴天也能存。图放在屋里，雨下在窗外。<br><br>
+    小屋规则只有一条：<em>别传见不得雨的图</em>。其余的，随便坐。☂
+  </div>
+</div>
+
+<!-- 底部 Tab -->
+<div class="tabs hidden" id="tabs">
+  <div class="tab on"><span class="ic">✦</span>上传</div>
+  <div class="tab" onclick="location.href='gallery.html'"><span class="ic">▦</span>图库</div>
+  <div class="tab" data-soon="工具间"><span class="ic">✂</span>工具间</div>
+  <div class="tab" data-soon="关于"><span class="ic">☰</span>关于</div>
+</div>
+<div id="toast" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:99;background:var(--card);border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);padding:10px 18px;font-size:14px;display:none;white-space:nowrap"></div>
+
+<script>
+/* ================== 配置 ================== */
+var API = '';            // 同域部署时留空；本地调试可填 'https://cloudflare-imgbed-ago.pages.dev'
+var UP_CHANNEL = '';     // 上传渠道名，留空用图床默认渠道
+
+/* ================== 主题 ================== */
+var themeBtn = document.getElementById('themeBtn');
+function applyTheme(d){ document.body.classList.toggle('dark', d); themeBtn.textContent = d ? '☀' : '☾'; try{ localStorage.setItem('rr_theme', d?'1':'0'); }catch(e){} }
+try{ applyTheme(localStorage.getItem('rr_theme')==='1'); }catch(e){}
+themeBtn.onclick = function(){ applyTheme(!document.body.classList.contains('dark')); };
+
+/* ================== 进屋 ================== */
+var gate = document.getElementById('gate'), home = document.getElementById('home'),
+    tabs = document.getElementById('tabs'), pwd = document.getElementById('pwd'),
+    err = document.getElementById('err');
+
+function enter(){
+  gate.classList.add('hidden'); home.classList.remove('hidden'); tabs.classList.remove('hidden');
+}
+function fail(msg){
+  err.textContent = msg || '密码不对，再敲一次';
+  gate.classList.add('shake'); setTimeout(function(){ gate.classList.remove('shake'); }, 450);
+}
+function doLogin(){
+  var p = pwd.value.trim();
+  if(!p){ fail('先输入密码'); return; }
+  err.textContent = '开门中…';
+  fetch(API + '/api/auth/login', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    credentials:'include',
+    body: JSON.stringify({authCode: p})
+  }).then(function(r){
+    if(r.ok){ err.textContent=''; enter(); }
+    else if(r.status===401){ fail('密码不对，再敲一次'); }
+    else if(r.status===404){ fail('演示模式：本地打开无法连图床'); }
+    else{ fail('门卡住了 ('+r.status+')，稍后再试'); }
+  }).catch(function(){ fail('连不上小屋（本地预览不能真登录，部署后即可）'); });
+}
+document.getElementById('loginBtn').onclick = doLogin;
+pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+document.getElementById('demoBtn').onclick = function(){ enter(); };
+
+/* ================== 上传 ================== */
+var drop = document.getElementById('drop'), fileInput = document.getElementById('file'),
+    pickBtn = document.getElementById('pickBtn'), bar = document.getElementById('bar'),
+    barFill = bar.querySelector('i'), list = document.getElementById('list');
+
+pickBtn.onclick = function(){ fileInput.click(); };
+fileInput.onchange = function(){ uploadAll(fileInput.files); fileInput.value=''; };
+
+['dragenter','dragover'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('dragging'); }); });
+['dragleave','drop'].forEach(function(ev){ drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('dragging'); }); });
+drop.addEventListener('drop', function(e){ if(e.dataTransfer && e.dataTransfer.files.length) uploadAll(e.dataTransfer.files); });
+document.addEventListener('paste', function(e){
+  if(gate.classList.contains('hidden')===false) return;
+  var fs = (e.clipboardData && e.clipboardData.files) || [];
+  if(fs.length) uploadAll(fs);
+});
+
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function makeItem(file){
+  var el = document.createElement('div');
+  el.className = 'item pcard';
+  el.innerHTML =
+    '<div class="row">' +
+      '<img alt="">' +
+      '<div class="meta">' +
+        '<div class="name">' + esc(file.name) + '</div>' +
+        '<div class="url hidden"></div>' +
+        '<div class="btns hidden">' +
+          '<button class="pbtn blue" data-k="url">URL</button>' +
+          '<button class="pbtn mint" data-k="md">MD</button>' +
+          '<button class="pbtn yellow" data-k="html">HTML</button>' +
+        '</div>' +
+        '<div class="stat">排队中…</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="bar"><i></i></div>';
+  list.insertBefore(el, list.firstChild);
+  var url='';
+  try{ url = URL.createObjectURL(file); }catch(e){}
+  if(url) el.querySelector('img').src = url;
+  return el;
+}
+
+function uploadOne(file, onDone){
+  var el = makeItem(file);
+  var stat = el.querySelector('.stat'), fill = el.querySelector('.bar i'),
+      urlBox = el.querySelector('.url'), btns = el.querySelector('.btns');
+
+  var fd = new FormData();
+  fd.append('file', file);
+  var qs = '?serverCompress=0&uploadNameType=0&autoRetry=0&uploadFolder=';
+  if(UP_CHANNEL) qs += '&channelName=' + encodeURIComponent(UP_CHANNEL);
+
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', API + '/upload' + qs);
+  xhr.withCredentials = true;
+  xhr.upload.onprogress = function(e){
+    if(e.lengthComputable){
+      var p = Math.round(e.loaded/e.total*100);
+      fill.style.width = p + '%';
+      stat.textContent = '上传中 ' + p + '%';
+    } else { stat.textContent = '上传中…'; }
+  };
+  xhr.onload = function(){
+    if(xhr.status >= 200 && xhr.status < 300){
+      var d; try{ d = JSON.parse(xhr.responseText); }catch(e){ d = null; }
+      var rec = (d && (d.data || d)) || {};
+      var src = rec.src || rec.url || rec.fileUrl || '';
+      fill.style.width = '100%';
+      if(src){
+        if(src.charAt(0)==='/') src = location.origin + src;
+        stat.textContent = '✓ 已收好';
+        urlBox.textContent = src;
+        urlBox.classList.remove('hidden');
+        btns.classList.remove('hidden');
+        btns.querySelectorAll('.pbtn').forEach(function(b){
+          b.onclick = function(){
+            var k = b.getAttribute('data-k'), t = src;
+            if(k==='md') t = '!['+file.name+'](' + src + ')';
+            if(k==='html') t = '<img src="' + src + '" alt="' + esc(file.name) + '">';
+            copy(t, b);
+          };
+        });
+      } else {
+        stat.textContent = '✓ 已上传，但没解析出链接：' + xhr.responseText.slice(0,120);
+      }
+    } else {
+      stat.textContent = '✗ 失败 (' + xhr.status + ')：' + String(xhr.responseText||'').slice(0,80);
+    }
+    onDone();
+  };
+  xhr.onerror = function(){ stat.textContent = '✗ 网络错误'; onDone(); };
+  xhr.send(fd);
+}
+
+var queue = [], busy = false;
+function uploadAll(files){
+  for(var i=0;i<files.length;i++) queue.push(files[i]);
+  pump();
+}
+function pump(){
+  if(busy || !queue.length){ if(!queue.length){ bar.classList.add('hidden'); } return; }
+  busy = true;
+  bar.classList.remove('hidden');
+  var f = queue.shift();
+  uploadOne(f, function(){ busy=false; barFill.style.width='0%'; pump(); });
+}
+
+function copy(t, btn){  var done = function(){ var o=btn.textContent; btn.textContent='✓ 已复制'; setTimeout(function(){ btn.textContent=o; },1200); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(done).catch(function(){ legacy(); });
+  } else legacy();
+  function legacy(){
+    var ta = document.createElement('textarea');
+    ta.value = t; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove(); done();
+  }
+}
+
+/* 公告（每天第一次进屋时弹一次） */
+var newsMask = document.getElementById('newsMask'), news = document.getElementById('news');
+function closeNews(){
+  newsMask.classList.remove('show'); news.classList.remove('show');
+  try{ localStorage.setItem('rr_news', new Date().toISOString().slice(0,10)); }catch(e){}
+}
+document.getElementById('newsX').onclick = closeNews;
+newsMask.onclick = closeNews;
+setTimeout(function(){
+  try{ if(localStorage.getItem('rr_news') === new Date().toISOString().slice(0,10)) return; }catch(e){}
+  newsMask.classList.add('show'); news.classList.add('show');
+}, 800);
+
+/* 未开放房间的提示 */
+var toast = document.getElementById('toast'), toastTimer = null;
+document.querySelectorAll('.tab[data-soon]').forEach(function(t){
+  t.onclick = function(){
+    toast.textContent = t.getAttribute('data-soon') + '还在刷漆，过两天再来 ♡';
+    toast.style.display = 'block';
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ toast.style.display = 'none'; }, 1800);
+  };
+});
+</script>
+</body>
+</html>
