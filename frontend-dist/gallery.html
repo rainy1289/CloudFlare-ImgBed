@@ -99,9 +99,10 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
   <!-- 管理密码门 -->
   <div class="gate pcard" id="gate">
     <h2>图库钥匙孔</h2>
-    <div class="sub">ADMIN KEY · 管理员密码才能进这间房</div>
-    <input class="pin" id="pwd" type="password" placeholder="输入管理密码" autocomplete="current-password">
-    <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:17px;padding:12px">开抽屉 →</button>
+    <div class="sub">ADMIN KEY · 管理员账号才能进这间房</div>
+    <input class="pin" id="user" type="text" placeholder="管理员用户名" autocomplete="username" style="margin-bottom:12px;letter-spacing:1px">
+    <input class="pin" id="pwd" type="password" placeholder="管理密码" autocomplete="current-password">
+    <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:17px;padding:12px;margin-top:14px">开抽屉 →</button>
     <div class="err" id="err"></div>
   </div>
 
@@ -158,12 +159,13 @@ var gate = document.getElementById('gate'), lib = document.getElementById('lib')
 function enter(){ gate.classList.add('hidden'); lib.classList.remove('hidden'); load(); }
 function fail(m){ err.textContent = m||'密码不对'; gate.classList.add('shake'); setTimeout(function(){ gate.classList.remove('shake'); },450); }
 document.getElementById('loginBtn').onclick = function(){
+  var u = document.getElementById('user').value.trim();
   var p = pwd.value.trim();
   if(!p){ fail('先输入密码'); return; }
   err.textContent = '开锁中…';
   fetch(API + '/api/auth/adminLogin', {
     method:'POST', headers:{'Content-Type':'application/json'},
-    credentials:'include', body: JSON.stringify({authCode: p})
+    credentials:'include', body: JSON.stringify({username: u, password: p})
   }).then(function(r){
     if(r.ok){ err.textContent=''; enter(); }
     else if(r.status===401){ fail('密码不对'); }
