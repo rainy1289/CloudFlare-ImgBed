@@ -190,6 +190,14 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
       <div class="bar hidden" id="bar"><i></i></div>
     </div>
 
+    <div id="allbox" class="pcard hidden" style="padding:14px;margin-bottom:18px">
+      <div style="font-size:14px;letter-spacing:1px">本次已收好 <b id="allNum">0</b> 张</div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="pbtn blue" id="copyAllUrl" style="font-size:13px;padding:7px 12px;box-shadow:3px 3px 0 var(--shadow)">复制全部 URL</button>
+        <button class="pbtn mint" id="copyAllMd" style="font-size:13px;padding:7px 12px;box-shadow:3px 3px 0 var(--shadow)">复制全部 MD</button>
+      </div>
+    </div>
+
     <div id="list"></div>
 
     <div class="foot">rainroom · 图放在屋里，雨下在窗外</div>
@@ -212,8 +220,8 @@ body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
 <div class="tabs hidden" id="tabs">
   <div class="tab on"><span class="ic">✦</span>上传</div>
   <div class="tab" onclick="location.href='gallery.html'"><span class="ic">▦</span>图库</div>
+  <div class="tab" onclick="location.href='admin.html'"><span class="ic">⚙</span>管理室</div>
   <div class="tab" data-soon="工具间"><span class="ic">✂</span>工具间</div>
-  <div class="tab" data-soon="关于"><span class="ic">☰</span>关于</div>
 </div>
 <div id="toast" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:99;background:var(--card);border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);padding:10px 18px;font-size:14px;display:none;white-space:nowrap"></div>
 
@@ -259,6 +267,16 @@ function doLogin(){
 document.getElementById('loginBtn').onclick = doLogin;
 pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') doLogin(); });
 
+/* 已有会话（14 天内登录过）→ 直接进屋 */
+err.textContent = '检查钥匙…';
+fetch(API + '/api/auth/sessionCheck', {credentials:'include'})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    err.textContent = '';
+    if(d && d.valid){ enter(); }
+  })
+  .catch(function(){ err.textContent = ''; });
+
 /* ================== 上传 ================== */
 var drop = document.getElementById('drop'), fileInput = document.getElementById('file'),
     pickBtn = document.getElementById('pickBtn'), bar = document.getElementById('bar'),
@@ -291,6 +309,7 @@ function makeItem(file){
           '<button class="pbtn blue" data-k="url">URL</button>' +
           '<button class="pbtn mint" data-k="md">MD</button>' +
           '<button class="pbtn yellow" data-k="html">HTML</button>' +
+          '<button class="pbtn pink" data-k="del">删除</button>' +
         '</div>' +
         '<div class="stat">排队中…</div>' +
       '</div>' +
@@ -327,17 +346,22 @@ function uploadOne(file, onDone){
     if(xhr.status >= 200 && xhr.status < 300){
       var d; try{ d = JSON.parse(xhr.responseText); }catch(e){ d = null; }
       var rec = (d && (d.data || d)) || {};
-      var src = rec.src || rec.url || rec.fileUrl || '';
+      if(typeof rec === 'string'){ try{ rec = JSON.parse(rec); }catch(e){ rec = {}; } }
+      if(rec && rec.result && typeof rec.result === 'object'){ rec = rec.result; }
+      var src = (rec && (rec.src || rec.url || rec.fileUrl)) || '';
       fill.style.width = '100%';
       if(src){
         if(src.charAt(0)==='/') src = location.origin + src;
         stat.textContent = '✓ 已收好';
+        pushUploaded(file.name, src);
         urlBox.textContent = src;
         urlBox.classList.remove('hidden');
         btns.classList.remove('hidden');
         btns.querySelectorAll('.pbtn').forEach(function(b){
           b.onclick = function(){
-            var k = b.getAttribute('data-k'), t = src;
+            var k = b.getAttribute('data-k');
+            if(k==='del'){ uploadDelete(b, src, el); return; }
+            var t = src;
             if(k==='md') t = '!['+file.name+'](' + src + ')';
             if(k==='html') t = '<img src="' + src + '" alt="' + esc(file.name) + '">';
             copy(t, b);
@@ -356,6 +380,52 @@ function uploadOne(file, onDone){
 }
 
 var queue = [], busy = false;
+var uploaded = [];
+var allbox = document.getElementById('allbox'), allNum = document.getElementById('allNum');
+function pushUploaded(name, src){
+  uploaded.push({name:name, src:src});
+  allNum.textContent = uploaded.length;
+  allbox.classList.remove('hidden');
+}
+function copyAll(kind, btn){
+  if(!uploaded.length) return;
+  var lines = uploaded.map(function(u){
+    return kind==='md' ? '!['+u.name+'](' + u.src + ')' : u.src;
+  }).join('\n');
+  copy(lines, btn);
+}
+document.getElementById('copyAllUrl').onclick = function(){ copyAll('url', this); };
+document.getElementById('copyAllMd').onclick = function(){ copyAll('md', this); };
+function uploadDelete(btn, src, el){
+  if(!confirm('删掉这张图？屋里屋外都会消失。')) return;
+  btn.disabled = true; var o = btn.textContent; btn.textContent = '删除中…';
+  var id = src.split('/file/')[1] || src;
+  fetch(API + '/api/manage/delete/' + encodeURIComponent(id).replace(/%2F/g,'/'), {
+    method:'DELETE', credentials:'include'
+  }).then(function(r){
+    if(r.ok){
+      el.querySelector('.stat').textContent = '已删除';
+      el.style.opacity = '.45';
+      btnsFade(el);
+    } else if(r.status===401 || r.status===403){
+      btn.disabled = false; btn.textContent = o;
+      el.querySelector('.stat').textContent = '删除需要管理权限，请去图库删（管理密码）';
+    } else {
+      btn.disabled = false; btn.textContent = o;
+      el.querySelector('.stat').textContent = '删除失败 (' + r.status + ')';
+    }
+  }).catch(function(){
+    btn.disabled = false; btn.textContent = o;
+    el.querySelector('.stat').textContent = '网络错误';
+  });
+}
+function btnsFade(el){
+  var btns = el.querySelector('.btns');
+  if(btns) btns.style.pointerEvents = 'none';
+  var img = el.querySelector('img');
+  if(img) img.style.filter = 'grayscale(1) opacity(.5)';
+}
+
 function uploadAll(files){
   for(var i=0;i<files.length;i++) queue.push(files[i]);
   pump();
