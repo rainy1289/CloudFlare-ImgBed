@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RAINROOM · 图库</title>
+<style>
+:root{
+  --bg:#efedf4; --card:#fdf8ef; --ink:#55506b; --ink-soft:#8a84a3;
+  --rain:#aebcd8; --blue:#9db8dd; --blue-deep:#7d9cc9;
+  --pink:#e8b4c4; --yellow:#f5dfae; --mint:#b5d4c4;
+  --shadow:rgba(85,80,107,.28);
+}
+body.dark{
+  --bg:#3a3752; --card:#4c4867; --ink:#d8d3ea; --ink-soft:#9c96b8;
+  --rain:#6f7ba0; --blue:#5f7dae; --blue-deep:#8fa8d0;
+  --pink:#c9a0b0; --yellow:#c9b078; --mint:#8fb5a3;
+  --shadow:rgba(20,18,35,.55);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"VT323",monospace;
+  background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:76px;transition:background .25s;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(115deg,transparent 0 14px,var(--rain) 14px 15.5px,transparent 15.5px 34px);
+  opacity:.30;
+}
+.wrap{position:relative;z-index:1;max-width:640px;margin:0 auto;padding:0 14px}
+.pcard{background:var(--card);border:3px solid var(--ink);box-shadow:6px 6px 0 var(--shadow);border-radius:0}
+.pbtn{
+  font:inherit;font-size:15px;color:var(--ink);background:var(--card);
+  border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);
+  padding:9px 14px;border-radius:0;cursor:pointer;user-select:none;letter-spacing:1px;
+}
+.pbtn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--shadow)}
+.pbtn.blue{background:var(--blue)} .pbtn.pink{background:var(--pink)} .pbtn.mint{background:var(--mint)}
+.pin{width:100%;font:inherit;font-size:16px;padding:11px 14px;color:var(--ink);background:#fffdf8;border:2.5px solid var(--ink);border-radius:0;outline:none}
+body.dark .pin{background:#3f3c58}
+.hidden{display:none !important}
+a{color:var(--blue-deep);text-decoration:none}
+
+.topbar{
+  position:sticky;top:0;z-index:50;margin:0 -14px 16px;padding:12px 14px;
+  background:linear-gradient(180deg,#d9dcee,#e9d9e2);
+  border-bottom:3px solid var(--ink);display:flex;align-items:center;gap:10px;
+}
+body.dark .topbar{background:linear-gradient(180deg,#45416a,#3a3752)}
+.sq{display:flex;gap:8px;align-items:center;font-size:17px;line-height:1}
+.brand{flex:1;font-size:24px;letter-spacing:2px;line-height:1}
+.brand small{display:block;font-size:11px;letter-spacing:6px;color:var(--ink-soft);margin-top:2px}
+.iconbtn{
+  width:36px;height:36px;background:var(--card);border:2.5px solid var(--ink);
+  box-shadow:3px 3px 0 var(--shadow);display:flex;align-items:center;justify-content:center;
+  font-size:17px;cursor:pointer;user-select:none;color:var(--ink);padding:0;
+}
+.sect{display:flex;align-items:center;gap:10px;margin:4px 0 14px;font-size:21px;letter-spacing:2px}
+.sect::after{content:"";flex:1;height:3px;background:var(--ink)}
+
+.gate{max-width:420px;margin:8vh auto 0;padding:30px 22px;text-align:center}
+.gate h2{font-size:23px;margin-bottom:6px;text-shadow:2px 2px 0 var(--yellow)}
+.gate .sub{font-size:12px;letter-spacing:5px;color:var(--ink-soft);margin-bottom:22px}
+.gate .pin{text-align:center;margin-bottom:14px;letter-spacing:3px}
+.gate .err{color:#c0657a;font-size:13px;margin-top:10px;min-height:18px}
+.gate .shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.thumb{cursor:pointer;overflow:hidden;padding:0;background:var(--card);position:relative}
+.thumb .im{aspect-ratio:1;background:var(--bg);border-bottom:3px solid var(--ink);overflow:hidden}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .nm{font-size:12px;padding:7px 8px;word-break:break-all;color:var(--ink-soft);min-height:30px}
+.empty{padding:40px 20px;text-align:center;color:var(--ink-soft);font-size:14px;line-height:2}
+.more{display:block;margin:20px auto 0}
+
+.mask{position:fixed;inset:0;background:rgba(60,56,86,.5);z-index:90;display:flex;align-items:center;justify-content:center;padding:18px}
+.viewer{max-width:440px;width:100%;max-height:86vh;overflow:auto;padding:16px;text-align:center}
+.viewer img{max-width:100%;border:3px solid var(--ink);margin-bottom:12px;background:#fff}
+.viewer .url{font-size:12px;word-break:break-all;background:var(--bg);border:2px solid var(--ink);padding:6px 8px;margin-bottom:12px;user-select:all;text-align:left}
+.viewer .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.viewer .row .pbtn{font-size:13px;padding:7px 12px;box-shadow:3px 3px 0 var(--shadow)}
+
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--card);border-top:3px solid var(--ink);display:flex}
+.tab{flex:1;padding:10px 0 12px;text-align:center;font-size:15px;letter-spacing:2px;cursor:pointer;user-select:none;color:var(--ink)}
+.tab .ic{display:block;font-size:19px;margin-bottom:2px}
+.tab.on{background:var(--mint);box-shadow:inset 0 0 0 3px var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="sq"><span>♡</span><span>☂</span><span>✦</span></div>
+    <div class="brand">RAINROOM<small>雨 的 小 屋 · 图 库</small></div>
+    <button class="iconbtn" id="themeBtn" title="切换主题">☾</button>
+  </div>
+
+  <!-- 管理密码门 -->
+  <div class="gate pcard" id="gate">
+    <h2>图库钥匙孔</h2>
+    <div class="sub">ADMIN KEY · 管理员密码才能进这间房</div>
+    <input class="pin" id="pwd" type="password" placeholder="输入管理密码" autocomplete="current-password">
+    <button class="pbtn blue" id="loginBtn" style="width:100%;font-size:17px;padding:12px">开抽屉 →</button>
+    <div class="err" id="err"></div>
+  </div>
+
+  <!-- 图库 -->
+  <div id="lib" class="hidden">
+    <div class="sect">ALL IMAGES</div>
+    <div class="grid" id="grid"></div>
+    <div class="empty hidden" id="empty">抽屉还空空的<br>回上传页存第一张图吧 ♡</div>
+    <button class="pbtn more hidden" id="moreBtn">加载更多 ↓</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab" onclick="location.href='index.html'"><span class="ic">✦</span>上传</div>
+  <div class="tab on"><span class="ic">▦</span>图库</div>
+  <div class="tab" id="soon1"><span class="ic">✂</span>工具间</div>
+  <div class="tab" id="soon2"><span class="ic">☰</span>关于</div>
+</div>
+
+<div class="mask hidden" id="mask">
+  <div class="viewer pcard">
+    <img id="vImg" alt="">
+    <div class="url" id="vUrl"></div>
+    <div class="row">
+      <button class="pbtn blue" data-k="url">URL</button>
+      <button class="pbtn mint" data-k="md">MD</button>
+      <button class="pbtn yellow" data-k="html">HTML</button>
+      <button class="pbtn pink" id="delBtn">删除</button>
+      <button class="pbtn" id="closeBtn">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast" style="position:fixed;left:50%;bottom:84px;transform:translateX(-50%);z-index:99;background:var(--card);border:2.5px solid var(--ink);box-shadow:4px 4px 0 var(--shadow);padding:10px 18px;font-size:14px;display:none;white-space:nowrap"></div>
+
+<script>
+var API = '';
+
+/* 主题 */
+var themeBtn = document.getElementById('themeBtn');
+function applyTheme(d){ document.body.classList.toggle('dark', d); themeBtn.textContent = d ? '☀' : '☾'; try{ localStorage.setItem('rr_theme', d?'1':'0'); }catch(e){} }
+try{ applyTheme(localStorage.getItem('rr_theme')==='1'); }catch(e){}
+themeBtn.onclick = function(){ applyTheme(!document.body.classList.contains('dark')); };
+
+/* 提示条 */
+var toast = document.getElementById('toast'), toastTimer = null;
+function say(msg){ toast.textContent = msg; toast.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(function(){ toast.style.display='none'; },1800); }
+document.getElementById('soon1').onclick = function(){ say('工具间还在刷漆，过两天再来 ♡'); };
+document.getElementById('soon2').onclick = function(){ say('关于也在刷漆 ♡'); };
+
+/* 管理登录 */
+var gate = document.getElementById('gate'), lib = document.getElementById('lib'),
+    pwd = document.getElementById('pwd'), err = document.getElementById('err');
+function enter(){ gate.classList.add('hidden'); lib.classList.remove('hidden'); load(); }
+function fail(m){ err.textContent = m||'密码不对'; gate.classList.add('shake'); setTimeout(function(){ gate.classList.remove('shake'); },450); }
+document.getElementById('loginBtn').onclick = function(){
+  var p = pwd.value.trim();
+  if(!p){ fail('先输入密码'); return; }
+  err.textContent = '开锁中…';
+  fetch(API + '/api/auth/adminLogin', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    credentials:'include', body: JSON.stringify({authCode: p})
+  }).then(function(r){
+    if(r.ok){ err.textContent=''; enter(); }
+    else if(r.status===401){ fail('密码不对'); }
+    else{ fail('锁卡住了 ('+r.status+')'); }
+  }).catch(function(){ fail('连不上小屋（本地预览不能真登录）'); });
+};
+pwd.addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('loginBtn').click(); });
+
+/* 图库 */
+var grid = document.getElementById('grid'), emptyBox = document.getElementById('empty'),
+    moreBtn = document.getElementById('moreBtn'), start = 0, pageSize = 60, loading = false;
+
+function pick(o){ for(var i=1;i<arguments.length;i++){ var k=arguments[i]; if(o && o[k]!==undefined && o[k]!==null && o[k]!=='') return o[k]; } return ''; }
+
+function recordInfo(r){
+  var name = pick(r,'name','filename','fileName') || pick(r.metadata||{},'name','filename','fileName') || pick(r,'id','path','fullId') || 'image';
+  var id   = pick(r,'id','path','fullId') || name;
+  var src  = pick(r,'src','url','fileUrl') || pick(r.metadata||{},'src','url','fileUrl');
+  if(!src && id) src = '/file/' + String(id).replace(/^\/+/, '');
+  if(src && src.charAt(0)==='/') src = location.origin + src;
+  return {name:String(name), id:String(id), src:src};
+}
+
+function load(){
+  if(loading) return; loading = true;
+  fetch(API + '/api/manage/list?start=' + start + '&count=' + pageSize + '&recursive=true', {credentials:'include'})
+    .then(function(r){
+      if(r.status===401){ lib.classList.add('hidden'); gate.classList.remove('hidden'); fail('登录过期，再开一次'); throw 0; }
+      return r.json();
+    })
+    .then(function(d){
+      if(d===0) return;
+      var files = Array.isArray(d) ? d : (d.files || d.list || d.data || d.records || []);
+      if(!files.length && start===0){ emptyBox.classList.remove('hidden'); moreBtn.classList.add('hidden'); return; }
+      files.forEach(function(r){
+        var info = recordInfo(r);
+        if(!info.src) return;
+        var el = document.createElement('div');
+        el.className = 'thumb pcard';
+        el.innerHTML = '<div class="im"><img loading="lazy" src="' + esc(info.src) + '" alt=""></div><div class="nm">' + esc(info.name) + '</div>';
+        el.onclick = function(){ openViewer(info); };
+        grid.appendChild(el);
+      });
+      if(files.length >= pageSize){ moreBtn.classList.remove('hidden'); }
+      else { moreBtn.classList.add('hidden'); }
+      start += files.length;
+    })
+    .catch(function(e){ if(e!==0) say('读取失败，稍后重试'); })
+    .then(function(){ loading=false; });
+}
+moreBtn.onclick = load;
+
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+/* 查看器 */
+var mask = document.getElementById('mask'), vImg = document.getElementById('vImg'),
+    vUrl = document.getElementById('vUrl'), cur = null;
+function copy(t,btn){ var o=btn.textContent; btn.textContent='✓ 已复制';
+  function done(){ setTimeout(function(){ btn.textContent=o; },1200); }
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(t).then(done).catch(function(){legacy();}); } else legacy();
+  function legacy(){ var ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove(); done(); }
+}
+function openViewer(info){
+  cur = info;
+  vImg.src = info.src; vUrl.textContent = info.src;
+  mask.classList.remove('hidden');
+  mask.querySelectorAll('.row .pbtn[data-k]').forEach(function(b){
+    b.onclick = function(){
+      var k = b.getAttribute('data-k'), t = info.src;
+      if(k==='md') t = '!['+info.name+'](' + info.src + ')';
+      if(k==='html') t = '<img src="' + info.src + '" alt="' + esc(info.name) + '">';
+      copy(t, b);
+    };
+  });
+}
+document.getElementById('closeBtn').onclick = function(){ mask.classList.add('hidden'); };
+mask.addEventListener('click', function(e){ if(e.target===mask) mask.classList.add('hidden'); });
+document.getElementById('delBtn').onclick = function(){
+  if(!cur) return;
+  if(!confirm('确定删除这张图吗？屋里屋外都会消失。')) return;
+  var btn = this; btn.textContent='删除中…'; btn.disabled=true;
+  fetch(API + '/api/manage/delete/' + encodeURIComponent(cur.id).replace(/%2F/g,'/'), {
+    method:'DELETE', credentials:'include'
+  }).then(function(r){
+    if(r.ok){ say('已删除 ✓'); mask.classList.add('hidden');
+      grid.querySelectorAll('.thumb').forEach(function(t){
+        if(t.querySelector('.nm') && t.querySelector('.nm').textContent===cur.name) t.remove();
+      });
+    } else { say('删除失败 ('+r.status+')'); }
+  }).catch(function(){ say('网络错误'); })
+  .then(function(){ btn.textContent='删除'; btn.disabled=false; });
+};
+</script>
+</body>
+</html>
